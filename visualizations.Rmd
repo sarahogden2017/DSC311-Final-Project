@@ -11,7 +11,50 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Load Libraries and Data
 ```{r idk}
+library(tidyverse)
 library(ggplot2)
+
+df <- read_csv("CHOLESTEROL.csv")
+head(df)
+
 ```
 
 # TO-DO: Visualize some data
+# What is the relationship between BMI and Cholesterol?
+```{r }
+df$BMI <- (df$Weight / (df$Height^2)) * 703
+
+plot(df$BMI, df$Tot_Chol, main = "Cholesterol vs BMI", xlab = "BMI", ylab = "Total Cholesterol")
+cor(df$BMI, df$Tot_Chol)
+
+ggplot(df, aes(x = Gender, y = Tot_Chol)) +
+  geom_boxplot() + 
+ labs(title = "Total Cholesterol by Gender", x = "Gender", y= "Total Cholesterol") +
+  theme_minimal()
+
+
+```
+
+
+# What is the effect of sleep and exercise on Cholesterol?
+```{r}
+boxplot(Tot_Chol ~ Sleep, data = df, main = "Cholesterol by Sleep", xlab="Sleep", ylab= "Total Cholesterol")
+
+boxplot(Tot_Chol ~ Exercise, data = df, main = "Cholesterol by Exercise", xlab="Exercise", ylab= "Total Cholesterol")
+
+sleep_exercise_model <- lm(Tot_Chol ~ Sleep + Exercise, data = df)
+summary(sleep_exercise_model)
+
+full_model <- lm(Tot_Chol ~., data = df)
+summary(full_model)
+
+anova(full_model, sleep_exercise_model)
+
+plot(sleep_exercise_model)
+plot(full_model)
+```
+
+
+
+
+
