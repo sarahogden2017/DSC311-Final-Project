@@ -1,6 +1,6 @@
 ---
 title: "Visualizing Cholesterol Data"
-author: "Group 3: Sarah Ogden, Nabin L"
+author: "Group 3: Sarah Ogden, Nabin L, Rajani Khatri"
 date: "2025-03-21"
 output: html_document
 ---
@@ -74,7 +74,22 @@ sleep_exercise_model <- lm(Tot_Chol ~ Sleep + Exercise, data = df)
 summary(sleep_exercise_model)
 
 ```
+#correlation and scatter plot
+```{r}
+library(GGally)
+library(corrplot)
+library(leaps)
+df$Gender <- as.factor(df$Gender)
+df$Heredity <- as.factor(df$Heredity)
+df$Smoke <- as.factor(df$Smoke)
+df$Race <- as.factor(df$Race)
+df$Diet <- as.factor(df$Diet)
+df$Alcohol <- as.factor(df$Alcohol)
+quantitative_vars <- df[, sapply(df, is.numeric)]
+ggcorr(quantitative_vars, label = TRUE, label_size = 4)
+plot(quantitative_vars)
 
+```
 
 # Model Fitting
 ```{r}
@@ -95,7 +110,6 @@ bs_result <- data.frame(
   CP = best_summary$cp,
   BIC = best_summary$bic)
 
-bs
 bs_model = lm(Tot_Chol ~ Gender + Heredity + Smoke + Age + Exercise + BMI, data = df)
 
 
