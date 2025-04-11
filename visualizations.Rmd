@@ -73,11 +73,34 @@ boxplot(Tot_Chol ~ Exercise, data = df, main = "Cholesterol by Exercise", xlab="
 sleep_exercise_model <- lm(Tot_Chol ~ Sleep + Exercise, data = df)
 summary(sleep_exercise_model)
 
+```
+
+
+# Model Fitting
+```{r}
+library(leaps)
 full_model <- lm(Tot_Chol ~., data = df)
 summary(full_model)
 
-anova(full_model, sleep_exercise_model)
+Best_subset <- regsubsets(Tot_Chol ~., data = df, nbest = 2)
+best_summary <- summary(Best_subset)
 
-plot(sleep_exercise_model)
-plot(full_model)
+
+bs_result <- data.frame(
+  NumVar = 1:nrow(best_summary$which),
+  best_summary$outmat, 
+  RSQ = best_summary$rsq, 
+  RSS = best_summary$rss,
+  AdjR2 = best_summary$adjr2, 
+  CP = best_summary$cp,
+  BIC = best_summary$bic)
+
+bs
+bs_model = lm(Tot_Chol ~ Gender + Heredity + Smoke + Age + Exercise + BMI, data = df)
+
+
+anova(full_model, bs_model)
+
+
 ```
+
