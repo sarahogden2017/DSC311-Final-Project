@@ -128,6 +128,13 @@ a$BIC<-as.numeric(a$BIC)
 train.mat <- model.matrix(Tot_Chol ~., data = df2)
 n_models <- nrow(subset.summary$which)
 
+set.seed(123)
+sample <- sample(c(TRUE, FALSE), nrow(vars), replace=TRUE, prob=c(0.7,0.3))
+train  <- df2[sample, ]
+test   <- df2[!sample, ]
+train.mat <- model.matrix(Tot_Chol ~., data = df2)
+n_models <- nrow(subset.summary$which)
+
 MSE <- rep(NA, 16)
 for(i in 1:16){
   coefi <- coef(subsets, id = i)
@@ -135,13 +142,35 @@ for(i in 1:16){
   MSE[i] <- mean((df2$Tot_Chol - pred)^2, data=df2)
 }
 MSE<-MSE
-e<-cbind(a,MSE)
+test.mat <- model.matrix(Tot_Chol ~., data = test)
+MSPE <- rep(NA, 16)
+for (i in 1:16) {
+  coefi <- coef(subsets, id = i)  
+  pred <- test.mat[, names(coefi)] %*% coefi  
+  MSPE[i] <- mean((test$Tot_Chol - pred)^2)  
+}
+
+e<-cbind(a,MSE,MSPE)
 e
+
 ```
 
 ### Interpretations
 Adjusted R^2 is very close in most of these models to mid-90's which is good. However, the best models based on CP and BIC are models 7 and 8.
+# Stepwise Regression
+```{r}
+null_model <- lm(Tot_Chol ~ 1, data = vars)
 
+step_model <- step(reg_full, direction = "both", 
+                   scope = list(lower = null_model, upper = reg_full), 
+                   trace = 1)
+
+
+plot(step_model)
+
+anova(step_model, reduced_mod)
+summary(step_model)
+```
 ## Evaluate Selected Models
 ```{r evaluation}
 model7<-lm(Tot_Chol~BMI+Age+Exercise+H1+H2+S1+S2,data=df2)
@@ -150,4 +179,7 @@ vif(model7)
 model8<-lm(Tot_Chol~BMI+Age+Exercise+Gender+H1+H2+S1+S2,data=df2)
 summary(model8)
 vif(model8)
+reduced_md <- lm(Tot_Chol~BMI+Age+Exercise+Gender+H1+H2+S1+S2+A1+A2,data=df2)
+
+anova(model8, reduced_md)
 ```
