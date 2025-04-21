@@ -1,0 +1,153 @@
+---
+title: "Project"
+author: "Group 3"
+date: "2025-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cholesterol Project
+
+```{r data, libraries}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(leaps)
+library(nortest)
+library(car)
+library(ggcorrplot)
+
+df<-read_csv("CHOLESTEROL.csv")
+df
+```
+## BMI
+```{r BMI}
+df$BMI <- (df$Weight / (df$Height^2)) * 703
+df<-df %>% dplyr::select(-c(Weight, Height))
+df <- df %>% dplyr::select(Tot_Chol, everything())
+df
+```
+
+## Demographics
+```{r demographics}
+pie.gender<-ggplot(df, aes())
+
+pie.heredity<-ggplot()
+
+pie.smoke<-ggplot()
+  
+pie.race<-ggplot()
+
+pie.diet<-ggplot()
+  
+pie.alcohol<-ggplot()
+
+histogram.age<-ggplot()
+  
+dot.exercise<-ggplot()
+  
+dot.sleep<-ggplot()
+  
+histogram.bmi<-ggplot()
+  
+histogram.chol<-ggplot()
+```
+
+### Interpretations
+stuff idk
+
+## Correlations
+```{r correlation}
+# correlation matrix
+
+# scatter plot thingy
+```
+
+### Interpretations
+Total Cholesterol is highly correlated with xyz.
+
+## Recode Categorical Variables
+```{r recode}
+df2<-df%>%dplyr::select(Tot_Chol, BMI, Diet, Age, Sleep, Exercise)
+
+# Gender where 1 is male
+df2$Gender<-ifelse(df$Gender=="Male",1,0)
+# H1 = 1 parent, H2 = 2 parents with Hypercholesterolemia
+df2$H1<-ifelse(df$Heredity == 1, 1, 0)
+df2$H2<-ifelse(df$Heredity == 2, 1, 0)
+# Smoke where S1 is light smoker, and S2 is heavy
+df2$S1<-ifelse(df$Smoke==1,1,0)
+df2$S2<-ifelse(df$Smoke==2,1,0)
+# Race where R1 is Hispanic, R2 is Black, and R3 is Asian
+df2$R1<-ifelse(df$Race==1,1,0)
+df2$R2<-ifelse(df$Race==2,1,0)
+df2$R3<-ifelse(df$Race==3,1,0)
+# Alcohol where A1 is social drinker, and A2 is heavy
+df2$A1<-ifelse(df$Alcohol==1,1,0)
+df2$A2<-ifelse(df$Alcohol==2,1,0)
+df2
+```
+
+## Full Model
+```{r full model}
+full_model <- lm(Tot_Chol ~., data = df2)
+summary(full_model)
+
+par(mfrow = c(2, 2))
+# Create a residual plot
+plot(full_model)
+qqnorm(full_model$residuals)
+qqline(full_model$residuals)
+ad.test(full_model$residuals)
+vif(full_model)
+```
+
+### Interpretations
+Assumptions for a linear model are met as the residuals appear to have equal variance and there is not sufficient evidence to show they are not normal (Anderson-Darling p-value=0.7529). The full model is too expensive as it uses 10+ variables, so we will conduct best subsets. Appears to be no problems with co-linearity.
+
+## Best Subsets
+```{r subsets}
+subsets <- regsubsets(Tot_Chol ~., data = df2, nbest = 2)
+subset.summary<-summary(subsets)
+RSQ<-round(subset.summary$rsq * 100, digits=2)
+ADJ_RSQ<-round(subset.summary$adjr2 * 100, digits=2)
+CP<-round(subset.summary$cp, digits=2)
+BIC<-round(subset.summary$bic, digits=2)
+b<-subset.summary$outmat
+No_Var<-c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15)
+a<-cbind(No_Var,b,RSQ,ADJ_RSQ,CP,BIC)
+a<-as.data.frame(a)
+a$No_Var<-as.numeric(a$No_Var)
+a$RSQ<-as.numeric(a$RSQ)
+a$ADJ_RSQ<-as.numeric(a$ADJ_RSQ)
+a$CP<-as.numeric(a$CP)
+a$BIC<-as.numeric(a$BIC)
+train.mat <- model.matrix(Tot_Chol ~., data = df2)
+n_models <- nrow(subset.summary$which)
+
+MSE <- rep(NA, 16)
+for(i in 1:16){
+  coefi <- coef(subsets, id = i)
+  pred <- train.mat[ ,names(coefi)] %*% coefi
+  MSE[i] <- mean((df2$Tot_Chol - pred)^2, data=df2)
+}
+MSE<-MSE
+e<-cbind(a,MSE)
+e
+```
+
+### Interpretations
+Adjusted R^2 is very close in most of these models to mid-90's which is good. However, the best models based on CP and BIC are models 7 and 8.
+
+## Evaluate Selected Models
+```{r evaluation}
+model7<-lm(Tot_Chol~BMI+Age+Exercise+H1+H2+S1+S2,data=df2)
+summary(model7)
+vif(model7)
+model8<-lm(Tot_Chol~BMI+Age+Exercise+Gender+H1+H2+S1+S2,data=df2)
+summary(model8)
+vif(model8)
+```
