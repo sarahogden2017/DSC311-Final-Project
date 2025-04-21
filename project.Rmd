@@ -35,7 +35,16 @@ df
 ```{r demographics}
 pie.gender<-ggplot(df, aes())
 
-pie.heredity<-ggplot()
+df.heredity <- df %>%
+  mutate(Heredity = recode(Heredity, `0` = 'Neither Parent', `1` = 'One Parent', `2` = 'Both Parents'))
+pie.heredity<-ggplot(df, aes(x="",fill=Heredity)) +
+  geom_bar(position="fill") +
+  geom_text(stat='count', 
+            aes(y=after_stat(..count..),label=after_stat(..count..)),
+            position=position_fill(0.5)) +
+  coord_polar(theta="y") +
+  theme_void()+
+  labs(title="Percentages of Hypercholesterolemia Heredity")
 
 pie.smoke<-ggplot()
   
