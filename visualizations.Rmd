@@ -1,6 +1,6 @@
 ---
 title: "Visualizing Cholesterol Data"
-author: "Group 3"
+author: "Group 3: Sarah Ogden, Nabin L"
 date: "2025-03-21"
 output: html_document
 ---
@@ -10,16 +10,45 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Load Libraries and Data
-```{r idk}
+```{r}
 library(tidyverse)
 library(ggplot2)
 
 df <- read_csv("CHOLESTEROL.csv")
 head(df)
-
 ```
 
-# TO-DO: Visualize some data
+# Data Visualizations
+# What proportion of the population has hereditary history of Hypercholesterolemia?
+```{r}
+library(dplyr)
+
+df <- df %>%
+  mutate(Heredity = recode(Heredity, `0` = 'Neither Parent', `1` = 'One Parent', `2` = 'Both Parents'))
+head(df)
+ggplot(df, aes(x="",fill=Heredity)) +
+  geom_bar(position="fill") +
+  geom_text(stat='count', 
+            aes(y=after_stat(..count..),label=after_stat(..count..)),
+            position=position_fill(0.5)) +
+  coord_polar(theta="y") +
+  theme_void()+
+  labs(title="Percentages of Hypercholesterolemia Heredity")
+```
+# Does Cholesterol differ by Heredity?
+```{r} 
+ggplot(df,aes(x=Heredity,y=Tot_Chol,color=Heredity))+
+  geom_boxplot()+
+  expand_limits(y = 0)+
+  labs(title="Cholesterol by Heredity",y="Total Cholesterol",x="Parents with Hypercholesterolemia")
+```
+# How does Cholesterol differ between genders?
+```{r}
+ggplot(df, aes(x=Gender,y=Tot_Chol,color=Gender))+
+  geom_boxplot()+
+  expand_limits(y = 0)+
+  labs(title="Cholesterol by Gender",y="Total Cholesterol")
+```
 # What is the relationship between BMI and Cholesterol?
 ```{r }
 df$BMI <- (df$Weight / (df$Height^2)) * 703
@@ -35,7 +64,6 @@ ggplot(df, aes(x = Gender, y = Tot_Chol)) +
 
 ```
 
-
 # What is the effect of sleep and exercise on Cholesterol?
 ```{r}
 boxplot(Tot_Chol ~ Sleep, data = df, main = "Cholesterol by Sleep", xlab="Sleep", ylab= "Total Cholesterol")
@@ -45,16 +73,141 @@ boxplot(Tot_Chol ~ Exercise, data = df, main = "Cholesterol by Exercise", xlab="
 sleep_exercise_model <- lm(Tot_Chol ~ Sleep + Exercise, data = df)
 summary(sleep_exercise_model)
 
-full_model <- lm(Tot_Chol ~., data = df)
-summary(full_model)
-
-anova(full_model, sleep_exercise_model)
-
-plot(sleep_exercise_model)
-plot(full_model)
 ```
 
 
+# Model Fitting
+```{r}
+# 1. Gender (Male = 0, Female = 1)
+df$Gender_bin <- ifelse(df$Gender == "Female", 1, 0)
+
+# 2. Heredity (0=None, 1=One, 2=Both)
+df$H1 <- ifelse(df$Heredity == 1, 1, 0)  # One parent
+df$H2 <- ifelse(df$Heredity == 2, 1, 0)  # Both parents
+
+# 3. Smoke (0=None, 1=Light, 2=Heavy)
+df$S1 <- ifelse(df$Smoke == 1, 1, 0)     # Light smoker
+df$S2 <- ifelse(df$Smoke == 2, 1, 0)     # Heavy smoker
+
+# 4. Race (0=White, 1=Hispanic, 2=Black, 3=Asian)
+df$R1 <- ifelse(df$Race == 1, 1, 0)      # Hispanic
+df$R2 <- ifelse(df$Race == 2, 1, 0)      # Black
+df$R3 <- ifelse(df$Race == 3, 1, 0)      # Asian
+
+# 5. Alcohol (0=None, 1=Social, 2=Heavy)
+df$A1 <- ifelse(df$Alcohol == 1, 1, 0)   # Social
+df$A2 <- ifelse(df$Alcohol == 2, 1, 0)   # Heavy
+
+head(df)
+#Full Model
+vars <- df[, c("Tot_Chol", "Gender_bin", "H1", "H2", "S1", "S2", "R1", "R2", "R3", 
+               "Diet_bin", "A1", "A2", "Age", "Sleep", "Exercise", "BMI")]
+reg_full <- lm(Tot_Chol ~ ., data = vars)
 
 
+par(mfrow = c(2, 2))
 
+# Create a residual plot
+plot(reg_full)
+df01 <- data.frame(fitted   = reg_full$fitted.values, 
+                   residual = reg_full$residuals)
+
+# Create a residual plot using ggplot2
+ggplot(data = df01, 
+       mapping = aes(x = fitted, 
+                     y = residual)
+) +
+  geom_point() +
+  xlab("Fitted Values") +
+  ylab("Residuals") +
+  ggtitle("Residual Plot")
+
+plot(reg_full, which=2)
+
+library(nortest)
+qqnorm(reg_full$residuals)
+qqline(reg_full$residuals)
+ad.test(reg_full$residuals)
+
+
+```
+
+
+# Best Subset
+```{r}
+library(leaps)
+bsreg_full <- regsubsets(Tot_Chol ~., data = vars, nbest = 2)
+bsreg_summary <- summary(bsreg_full)
+
+a <- data.frame(
+  Nvar = 1:nrow(bsreg_summary$which),
+  bsreg_summary$outmat,
+  RSQ = round(bsreg_summary$rsq * 100, digits=2),
+  ADJ_RSQ = round(bsreg_summary$adjr2 * 100, digits=2),
+  CP = round(bsreg_summary$cp, digits=2),
+  BIC = round(bsreg_summary$bic, digits=2)
+)
+a
+p1<-ggplot(data = a, aes(x = as.factor(Nvar), y = RSQ))+
+  geom_point(color="black", size=2) +ylab("RSQ") + xlab("No of variables")
+
+p2<-ggplot(data = a, aes(x = as.factor(Nvar), y = ADJ_RSQ)) +
+  geom_point(color="black", size=2) +ylab("Adjusted RSQ") + xlab("No of variables")+
+  geom_point(data = a[which.max(a$ADJ_RSQ), ], color="red", 
+             size=3) 
+
+p3<-ggplot(data = a, aes(x = as.factor(Nvar), y = CP)) +
+  geom_point(color="black", size=2) +ylab("Cp") + xlab("No of variables")+
+  geom_point(data = a[which.min(a$CP), ], color="red", 
+             size=3) 
+
+p4<-ggplot(data = a, aes(x = as.factor(Nvar), y = BIC)) +
+  geom_point(color="black", size=2) +ylab("BIC") + xlab("No of variables")+
+  geom_point(data = a[which.min(a$BIC), ], color="red", 
+             size=3) 
+library(gridExtra)
+grid.arrange(p1,p2,p3,p4,nrow=2)
+
+set.seed(123)
+sample <- sample(c(TRUE, FALSE), nrow(vars), replace=TRUE, prob=c(0.7,0.3))
+train  <- vars[sample, ]
+test   <- vars[!sample, ]
+train.mat <- model.matrix(Tot_Chol ~., data = train)
+MSE <- rep(NA, 16)
+for(i in 1:16){
+  coefi <- coef(bsreg_full, id = i)
+  pred <- train.mat[ ,names(coefi)] %*% coefi
+  MSE[i] <- mean((train$Tot_Chol - pred)^2, data=train)
+}
+MSE<-MSE
+
+
+test.mat <- model.matrix(Tot_Chol ~., data = test)
+MSPE <- rep(NA, 16)
+for (i in 1:16) {
+  coefi <- coef(bsreg_full, id = i)  
+  pred <- test.mat[, names(coefi)] %*% coefi  
+  MSPE[i] <- mean((test$Tot_Chol - pred)^2)  
+}
+
+e<-cbind(a,MSE,MSPE)
+e
+
+reduced_mod <- lm(Tot_Chol ~ Gender_bin + H1+H2+S1+S2+Age+Exercise+BMI, data = vars)
+summary(reduced_mod)
+```
+
+
+# Stepwise regression (both directions)
+```{r}
+
+null_model <- lm(Tot_Chol ~ 1, data = vars)
+
+step_model <- step(reg_full, direction = "both", 
+                   scope = list(lower = null_model, upper = reg_full), 
+                   trace = 1)
+
+plot(step_model)
+
+anova(step_model, reduced_mod)
+```
