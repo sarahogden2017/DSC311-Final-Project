@@ -136,7 +136,7 @@ train.mat <- model.matrix(Tot_Chol ~., data = df2)
 n_models <- nrow(subset.summary$which)
 
 set.seed(123)
-sample <- sample(c(TRUE, FALSE), nrow(vars), replace=TRUE, prob=c(0.7,0.3))
+sample <- sample(c(TRUE, FALSE), nrow(df2), replace=TRUE, prob=c(0.7,0.3))
 train  <- df2[sample, ]
 test   <- df2[!sample, ]
 train.mat <- model.matrix(Tot_Chol ~., data = df2)
@@ -166,16 +166,14 @@ e
 Adjusted R^2 is very close in most of these models to mid-90's which is good. However, the best models based on CP and BIC are models 7 and 8.
 # Stepwise Regression
 ```{r}
-null_model <- lm(Tot_Chol ~ 1, data = vars)
+null_model <- lm(Tot_Chol ~ 1, data = df2)
 
-step_model <- step(reg_full, direction = "both", 
-                   scope = list(lower = null_model, upper = reg_full), 
+step_model <- step(full_model, direction = "both", 
+                   scope = list(lower = null_model, upper = full_model), 
                    trace = 1)
 
 
 plot(step_model)
-
-anova(step_model, reduced_mod)
 summary(step_model)
 ```
 ## Evaluate Selected Models
