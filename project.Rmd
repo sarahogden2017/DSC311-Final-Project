@@ -34,49 +34,212 @@ df
 
 ## Demographics
 ```{r demographics}
-pie.gender<-ggplot(df, aes())
+pie.gender <- ggplot(df, aes(x = "", fill = as.factor(Gender), group = as.factor(Gender))) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "count",
+            aes(y = after_stat(..count..),
+                label = after_stat(..count..)),
+            position = position_fill(0.5)) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Gender Distribution in the Sample", fill = "Participant Gender")
+pie.gender
+```
+#Interpretation
+The sample is evenly split: 50% Male, 50% Female which means our analysis won't be biased toward one gender.
 
-pie.heredity<-ggplot(df, aes(x="",fill=as.factor(Heredity),group=as.factor(Heredity)))+
-  geom_bar(position="fill")+
+
+```{r}
+pie.heredity<-ggplot(df, aes(x="",fill=as.factor(Heredity),group=as.factor(Heredity))) +
+  geom_bar(position="fill") +
   geom_text(stat='count', 
             aes(y=after_stat(..count..),label=after_stat(..count..)),
-            position=position_fill(0.5))+
+            position=position_fill(0.5)) +
   coord_polar(theta="y") +
   theme_void()+
   labs(title="Percentages of Hypercholesterolemia Heredity",fill="Number of Parents with Hypercholesterolemia")
+pie.heredity 
+```
+#Interpretation
+Around 36% of participants have no family history of hypercholesterolemia, meaning neither parent was affected. About 34% reported that only one parent had high cholesterol, while the remaining 30% stated that both parents had a history of hypercholesterolemia. These data allows us to explore how genetic background might influence cholesterol levels, without having one group dominate the data. It also gives us a good foundation to assess whether hereditary factors play a significant role in predicting total cholesterol in comparison to lifestyle variables like diet or exercise.
+
+```{r}
+pie.smoke <- ggplot(df, aes(x = "", fill = as.factor(Smoke), group = as.factor(Smoke))) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "count",
+            aes(y = after_stat(..count..),
+                label = after_stat(..count..)),
+            position = position_fill(0.5)) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Smoking Status Distribution in the Sample",
+       fill = "Smoking Status Breakdown")
+pie.smoke
+
+```
+#Interpretation
+participants are categorized into nonsmokers which is about 43%, light smokers which is about 27%, and heavy smokers which is about 30%, which provides a wide range of smoking exposure levels. This variation is important because it allows us to examine whether different levels of tobacco use are associated with changes in total cholesterol.
 
 
-pie.smoke<-ggplot()
-  
-pie.race<-ggplot()
+```{r} 
+pie.race <- ggplot(df, aes(x = "", fill = as.factor(Race), group = as.factor(Race))) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "count",
+            aes(y = after_stat(..count..),
+                label = after_stat(..count..)),
+            position = position_fill(0.5)) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Race Distribution in the Sample",
+       fill = "Race")
+pie.race
 
-pie.diet<-ggplot()
-  
-pie.alcohol<-ggplot()
+```
+#Interpretation
+the dataset includes participants from a few different racial backgrounds, but most of them about 69% are White. The rest of the sample includes 13% Black, 10% Hispanic, and 8% Asian individuals. While it's good that there's some diversity, the distribution is not fully balanced. Because most participants are White, any patterns or conclusions we find might mostly reflect that group.
 
-histogram.age<-ggplot()
-  
-dot.exercise<-ggplot()
-  
-dot.sleep<-ggplot()
-  
-histogram.bmi<-ggplot()
-  
-histogram.chol<-ggplot()
+
+```{r}
+pie.diet <- ggplot(df, aes(x = "", fill = as.factor(Diet), group = as.factor(Diet))) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "count",
+            aes(y = after_stat(..count..),
+                label = after_stat(..count..)),
+            position = position_fill(0.5)) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Diet Type Distribution in the Sample",
+       fill = "Diet Type")
+pie.diet
+
+```
+#Interpretation
+About 59% reported having an unhealthy diet, while 41% said they follow a healthy diet. This data helps set the stage for analyzing whether diet quality is connected to cholesterol levels in the body.Since both diet types are well represented, we’ll be able to explore whether people with a healthier diet tend to have better cholesterol outcomes compared to those with poor eating habits.
+
+
+
+```{r}  
+pie.alcohol <- ggplot(df, aes(x = "", fill = as.factor(Alcohol), group = as.factor(Alcohol))) +
+  geom_bar(position = "fill") +
+  geom_text(stat = "count",
+            aes(y = after_stat(..count..),
+                label = after_stat(..count..)),
+            position = position_fill(0.5)) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(title = "Alcohol Consumption Distribution in the Sample",
+       fill = "Alcohol Use")
+
+pie.alcohol
+
+
+```
+#Interpretation
+According to the chart, most participants in the dataset, about 67%, are social drinkers, while 19% reported heavy alcohol use, and only 14% reported no alcohol consumption at all.the sample includes all three types of drinking behaviors, we’ll be able to observe if and how drinking habits are related to heart health risks like high cholesterol.
+
+
+
+
+```{r}
+histogram.age <- ggplot(df, aes(x = Age)) +
+  geom_histogram(binwidth = 5, fill = "#69b3a2", color = "blue", boundary = 0) +
+  labs(title = "Age Distribution of Participants",
+       x = "Age (years)",
+       y = "Count") +
+  theme_minimal()
+histogram.age
+
+```
+#Interpretation
+The age distribution of participants shows that most individuals in the dataset fall within the 40 to 60 year range, with the highest concentration around the 45–50 mark. There are a few younger participants in their 20s and 30s, as well as some older individuals up to age 70, but the majority are middle-aged.Since, middle-aged individuals are more likely to experience health issues related to cholesterol, having this age group well represented in the dataset helps strengthen the relevance of our analysis.
+
+
+
+
+```{r}  
+dot.exercise <- ggplot(df, aes(x = Exercise)) +
+  geom_dotplot(binwidth = 1, dotsize = 0.1, fill = "#1f78b4") +
+  labs(title = "Distribution of Weekly Exercise Hours",
+       x = "Exercise Hours per Week",
+       y = NULL) +
+  theme_minimal()
+dot.exercise
 ```
 
-### Interpretations
-stuff idk
+#Interpretation
+Most participants engage in about 3 to 4 hours of physical activity per week. There are also several individuals who exercise less than 2 hours or not at all, and only a small number who exercise as much as 6 hours weekly.This data is useful because exercise is often linked to better heart health, and we can now explore whether those who exercise more tend to have lower cholesterol levels.
+
+```{r}
+dot.sleep <- ggplot(df, aes(x = Sleep)) +
+  geom_dotplot(binwidth = 1, dotsize = 0.1, fill = "#a05d56") +
+  labs(title = "Distribution of Daily Sleep Hours",
+       x = "Sleep Hours per Day",
+       y = NULL) +
+  theme_minimal()
+dot.sleep
+
+```
+  #Interpretation
+  The sleep pattern among participants shows that most people in the dataset sleep between 4 to 6 hours per day, with a few individuals getting as little as 2 hours or as much as 10 hours. This data shows that many participants seem to get less than the recommended 7–8 hours of sleep.Sleep also plays a major role in overall health, we can explore to see whether those who sleep more have healthier cholesterol levels
+  
+```{r}
+histogram.bmi <- ggplot(df, aes(x = BMI)) +
+  geom_histogram(binwidth = 2, fill = "#69b3a2", color = "blue") +
+  labs(title = "BMI Distribution of Participants",
+       x = "BMI",
+       y = "Count") +
+  theme_minimal()
+
+histogram.bmi
+```
+#Interpretation
+The chart shows that most people in the data have a BMI between 20 and 40. This is where the bars are the tallest. Some people have a BMI a little less than 20 or more than 40, but not many. A few people have BMI that goes close to 60. This means there are many different body sizes in the group. Because BMI is important for health, we can check if people with higher BMI also have higher cholesterol.
+
+```{r}
+histogram.chol <- ggplot(df, aes(x = Tot_Chol)) +
+  geom_histogram(binwidth = 5, fill = "#69b3a2", color = "blue") +
+  labs(title = "Total Cholesterol Distribution of Participants",
+       x = "Total Cholesterol Level",
+       y = "Count") +
+  theme_minimal()
+histogram.chol
+
+
+```
+#Interpretation
+The chart shows that most people have total cholesterol levels between 200 and 250. This is where the bars are tallest. Some people have lower cholesterol close to 150, and some have higher levels going up to just above 300. This tells us that cholesterol is different for each person in the data. Because high cholesterol can be bad for health, we can check if it is connected to things like diet, sleep, exercise, or alcoholic habit.
 
 ## Correlations
 ```{r correlation}
 # correlation matrix
+library(GGally)
 
+df$Gender <- as.factor(df$Gender)
+df$Heredity <- as.factor(df$Heredity)
+df$Smoke <- as.factor(df$Smoke)
+df$Race <- as.factor(df$Race)
+df$Diet <- as.factor(df$Diet)
+df$Alcohol <- as.factor(df$Alcohol)
+quantitative_vars <- df[, sapply(df, is.numeric)]
+quantitative_vars <- quantitative_vars[c("BMI", "Age", "Sleep", "Exercise", "Tot_Chol")]
+ggcorr(quantitative_vars, label = TRUE, label_size = 4)
+plot(quantitative_vars)
+```
+### Interpretations
+Age has a strong positive relationship with cholesterol (0.7), meaning that as people get older, their cholesterol levels tend to be higher. BMI also has a moderate positive relationship (0.4), so people with higher BMI usually have higher cholesterol. On the other hand, exercise has a negative relationship with cholesterol (-0.5), which means that people who exercise more often tend to have lower cholesterol levels. Sleep shows no relationship (0), suggesting that how much someone sleeps does not affect their cholesterol in this dataset.
+
+
+
+```{r}
 # scatter plot thingy
+ggpairs(df[, c("Tot_Chol", "BMI", "Age", "Gender", "Heredity", 
+               "Smoke", "Race", "Diet", "Alcohol", "Sleep", "Exercise")],
+        aes(color = Gender))
 ```
 
 ### Interpretations
-Total Cholesterol is highly correlated with xyz.
+This chart shows how all the things in the data are connected. It uses red and blue to show two groups, like male and female. At the top, we can see numbers that tell us if two things go up or down together. For example, when BMI and age go up, cholesterol also goes up. So, older people or people with higher BMI may have higher cholesterol. Exercise is different-people who exercise more have lower cholesterol. Sleep does not change cholesterol much. The chart also shows differences in cholesterol based on gender, smoking, race, diet, and alcohol. This helps us understand what things might change a person’s cholesterol level.
+
 
 ## Recode Categorical Variables
 ```{r recode}
